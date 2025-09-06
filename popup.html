@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 12px; width: 240px; }
+      #status { font-weight: 700; margin: 8px 0; }
+      button { padding: 6px 10px; margin-right: 6px; }
+      .pill { display:inline-block; padding:2px 8px; border-radius:999px; }
+      .focused { background:#e6ffed; color:#05620e; }
+      .distracted { background:#ffefef; color:#8a0303; }
+    </style>
+  </head>
+  <body>
+    <h3>Smart Focus</h3>
+    <div id="status"><span class="pill">State: —</span></div>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+    <p style="font-size:12px;color:#666;margin-top:10px;">
+      Local only. No uploads. Works on normal websites (not chrome:// pages).
+    </p>
+    <script src="popup.js"></script>
+  </body>
+</html>
