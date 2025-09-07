@@ -1,24 +1,84 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <style>
-      body { font-family: system-ui, sans-serif; padding: 12px; width: 240px; }
-      #status { font-weight: 700; margin: 8px 0; }
-      button { padding: 6px 10px; margin-right: 6px; }
-      .pill { display:inline-block; padding:2px 8px; border-radius:999px; }
-      .focused { background:#e6ffed; color:#05620e; }
-      .distracted { background:#ffefef; color:#8a0303; }
-    </style>
-  </head>
-  <body>
-    <h3>Smart Focus</h3>
-    <div id="status"><span class="pill">State: —</span></div>
-    <button id="start">Start</button>
-    <button id="stop">Stop</button>
-    <p style="font-size:12px;color:#666;margin-top:10px;">
-      Local only. No uploads. Works on normal websites (not chrome:// pages).
-    </p>
-    <script src="popup.js"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Focus</title>
+  <style>
+    :root{
+      --bg:#f0f8ff;          
+      --fg:#0a2540;          
+      --muted:#44607a;       
+      --card:#ffffff;        
+      --border:#c7d7eb;      
+      --ok:#1e90ff;          
+      --warn:#ff4d6d;        
+      --accent:#3b82f6;      
+      --btn:#e6f0fa;         
+      --btn-text:#0a2540;
+      --btn-hover:#d1e6fb;
+    }
+    html,body{
+      margin:0;padding:0;
+      font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Inter,Arial;
+      background:var(--bg); color:var(--fg);
+    }
+    .wrap{width:300px; padding:14px;}
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px;
+      box-shadow:0 6px 20px rgba(0,0,0,.08);
+    }
+    .title{font-weight:700; font-size:16px; margin-bottom:12px;}
+    .badge{font-weight:700; padding:6px 12px; border-radius:999px; border:1px solid var(--border);}
+    .focused{background:#e0f0ff; color:var(--ok);}
+    .distracted{background:#ffe5eb; color:var(--warn); animation:pulse 1.2s ease-in-out infinite;}
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 0 rgba(255,77,109,.3);}
+      70%{box-shadow:0 0 0 12px rgba(255,77,109,0);}
+      100%{box-shadow:0 0 0 0 rgba(255,77,109,0);}
+    }
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0 10px;}
+    .field{display:flex; flex-direction:column; gap:4px;}
+    .label{font-size:12px; color:var(--muted);}
+    input[type="number"]{
+      background:var(--btn); color:var(--fg);
+      border:1px solid var(--border); border-radius:8px; padding:8px; width:100%;
+    }
+    .row{display:flex; gap:8px; margin-top:10px;}
+    .btn{
+      flex:1; background:var(--btn); color:var(--btn-text); border:1px solid var(--border);
+      padding:10px 12px; border-radius:10px; font-weight:600; cursor:pointer; transition:.15s;
+    }
+    .btn:hover{background:var(--btn-hover); transform:translateY(-1px);}
+    .btn.primary{background:var(--accent); color:white; border-color:transparent;}
+    .timer{font-variant-numeric: tabular-nums; font-weight:700; letter-spacing:.5px; color:var(--accent); text-align:center;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="title">Smart Focus</div>
+
+      <div class="grid">
+        <div class="field">
+          <label class="label">Focus (min)</label>
+          <input id="focusMin" type="number" min="1" value="25"/>
+        </div>
+        <div class="field">
+          <label class="label">Break (min)</label>
+          <input id="breakMin" type="number" min="1" value="5"/>
+        </div>
+      </div>
+
+      <div class="label" style="text-align:center;">Time left</div>
+      <div id="timer" class="timer">00:00</div>
+
+      <div class="row">
+        <button id="start" class="btn primary">Start</button>
+        <button id="stop" class="btn">Stop</button>
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
 </html>

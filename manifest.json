@@ -2,10 +2,9 @@
     "manifest_version": 3,
     "name": "Smart Focus (MVP)",
     "version": "0.0.1",
-    "description": "Simple mouse-idle focus detector (local only).",
     "permissions": ["storage", "notifications"],
     "background": { "service_worker": "background.js" },
-    "action": { "default_popup": "popup.html", "default_title": "Smart Focus" },
+    "action": { "default_popup": "popup.html" },
     "content_scripts": [{
       "matches": ["http://*/*", "https://*/*"],
       "js": ["content.js"],
@@ -13,3 +12,4 @@
     }],
     "icons": { "128": "icon128.png" }
   }
+  

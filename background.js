@@ -1,54 +1,58 @@
 let running = false;
-let lastState = 'unknown';
-let lastFocusedTs = Date.now();
-let distractedSince = null;
+let inBreak = false;
+let phaseEndTs = 0;
+let focusMs = 25*60_000;
+let breakMs = 5*60_000;
+let tickId = null;
 
-// simple rule based on idle time
-function classify(idle_ms) {
-  if (idle_ms >= 120_000) return 'distracted'; // 2+ minutes idle
-  if (idle_ms < 60_000)   return 'focused';    // moving within 60s
-  return lastState;                            // in-between: keep prior
-}
-
+// handle messages from popup and content
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg.type === 'START_SESSION') { running = true; sendResponse({ ok: true }); return; }
-  if (msg.type === 'STOP_SESSION')  { running = false; lastState = 'unknown'; sendResponse({ ok: true }); return; }
-
-  if (msg.type === 'MOUSE_METRICS' && running) {
-    const { idle_ms } = msg.payload;
-    const state = classify(idle_ms);
-
-    if (state !== lastState) {
-      lastState = state;
-      if (state === 'focused') { lastFocusedTs = Date.now(); distractedSince = null; }
-      if (state === 'distracted' && !distractedSince) distractedSince = Date.now();
-    }
-
-    // optional: one nudge after 5 minutes distracted (cooldown 10 min)
-    maybeNotify();
+  if (msg.type === 'START_SESSION') {
+    const p = msg.payload || {};
+    focusMs = Math.max(60_000, (p.focusMin ?? 25) * 60_000);
+    breakMs = Math.max(60_000, (p.breakMin ?? 5) * 60_000);
+    startSession();
+    sendResponse({ ok: true });
+    return true;
   }
-
+  if (msg.type === 'STOP_SESSION') {
+    stopSession();
+    sendResponse({ ok: true });
+    return true;
+  }
   if (msg.type === 'GET_STATE') {
-    sendResponse({ state: lastState });
+    sendResponse({ inBreak, remainingMs: Math.max(0, phaseEndTs - Date.now()) });
+    return true;
   }
-  return true; // keep sendResponse alive if we ever make it async
+  return false;
 });
 
-// simple notification with cooldown
-let lastNudgeTs = 0;
-function maybeNotify() {
+function startSession(){
+  running = true;
+  inBreak = false;
+  phaseEndTs = Date.now() + focusMs;
+  if (tickId) clearInterval(tickId);
+  tickId = setInterval(tick, 1000);
+}
+
+function stopSession(){
+  running = false;
+  inBreak = false;
+  phaseEndTs = 0;
+  if (tickId) { clearInterval(tickId); tickId = null; }
+}
+
+function tick(){
+  if (!running) return;
   const now = Date.now();
-  const cool = 10 * 60_000; // 10 min
-  if (lastState === 'distracted' && distractedSince && (now - distractedSince) > 5 * 60_000) {
-    if (now - lastNudgeTs > cool) {
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icon128.png',
-        title: 'Stay on task',
-        message: 'You’ve been away for ~5 minutes. Quick reset?',
-        priority: 2
-      });
-      lastNudgeTs = now;
-    }
+  if (now >= phaseEndTs) {
+    inBreak = !inBreak;
+    phaseEndTs = now + (inBreak ? breakMs : focusMs);
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon128.png',
+      title: inBreak ? 'Break time!' : 'Focus block',
+      message: inBreak ? 'Relax a bit.' : 'Let’s get back to it!'
+    });
   }
 }
